@@ -6,6 +6,19 @@ spring:
       max-file-size: 50MB   # 最大单文件上传限制
       max-request-size: 200MB # 最大请求体
   datasource:
+    url: jdbc:mysql://localhost:3306/cst_file_manage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+  data:
     redis:
       host: 127.0.0.1
       port: 6379
@@ -13,3 +26,31 @@ spring:
       database: 0
 file:
   upload-dir: uploads
+# JWT配置
+jwt:
+  secret: your-secret-key-should-be-at-least-256-bits-long-for-security-please-change-in-production
+  expiration: 86400000  # 24小时，单位：毫秒
+# 邮件配置
+spring:
+  mail:
+    host: smtp.example.com
+    port: 587
+    username: your-email@example.com
+    password: your-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    from: noreply@example.com
+# 通知配置
+notification:
+  email:
+    enabled: true
+  sms:
+    enabled: false
+# 短信配置
+sms:
+  provider: mock  # mock 或实际服务商名称
+  api-key: ""

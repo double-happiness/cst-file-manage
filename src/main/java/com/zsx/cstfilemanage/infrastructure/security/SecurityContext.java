@@ -32,6 +32,14 @@ public class SecurityContext {
     }
 
     /**
+     * 获取当前用户名
+     */
+    public static String getCurrentUserName() {
+        UserInfo user = CONTEXT.get();
+        return user == null ? null : (user.getRealName() != null ? user.getRealName() : user.getUsername());
+    }
+
+    /**
      * 清理当前线程上下文
      */
     public static void clear() {
@@ -45,6 +53,7 @@ public class SecurityContext {
     public static class UserInfo {
         private Long userId;
         private String username;
+        private String realName;
         private String tenantId; // 多租户可选
     }
 }
