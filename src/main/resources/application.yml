@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: cst-file-manage
+  servlet:
+    multipart:
+      max-file-size: 50MB   # 最大单文件上传限制
+      max-request-size: 200MB # 最大请求体
+  datasource:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: ""
+      database: 0
+file:
+  upload-dir: uploads
