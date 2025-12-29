@@ -6,8 +6,8 @@ USER 0
 
 ARG jarFile
 ENV JVM_OPTS -server -XX:MetaspaceSize=64m -XX:MaxGCPauseMillis=50
-ADD ./target/moms-mtmgr-0.0.1-SNAPSHOT.jar  mtmgr.jar
+ADD ./target/cst-file-manage-0.0.1-SNAPSHOT.jar  cstfilemanage.jar
 ENV TZ=Asia/Dubai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN chmod +x /var/log   #日志文件目录
-ENTRYPOINT  java ${JVM_OPTS} ${ENV_MEM_JVM_OPTS} -Djava.security.egd=filey:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=GMT+04 -jar mtmgr.jar
+ENTRYPOINT  java ${JVM_OPTS} ${ENV_MEM_JVM_OPTS} -Djava.security.egd=filey:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=GMT+04 -jar cstfilemanage.jar
