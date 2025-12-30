@@ -13,6 +13,7 @@ import com.zsx.cstfilemanage.domain.repository.DocumentDistributionRepository;
 import com.zsx.cstfilemanage.domain.repository.DocumentRepository;
 import com.zsx.cstfilemanage.domain.repository.DistributionReceiverRepository;
 import com.zsx.cstfilemanage.domain.repository.UserRepository;
+import com.zsx.cstfilemanage.domain.repository.UserGroupMemberRepository;
 import com.zsx.cstfilemanage.application.service.NotificationService;
 import com.zsx.cstfilemanage.infrastructure.security.SecurityContext;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class DistributionService {
     private final DocumentDistributionRepository distributionRepository;
     private final DistributionReceiverRepository receiverRepository;
     private final UserRepository userRepository;
+    private final UserGroupMemberRepository userGroupMemberRepository;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
@@ -42,11 +44,13 @@ public class DistributionService {
                               DocumentDistributionRepository distributionRepository,
                               DistributionReceiverRepository receiverRepository,
                               UserRepository userRepository,
+                              UserGroupMemberRepository userGroupMemberRepository,
                               NotificationService notificationService) {
         this.documentRepository = documentRepository;
         this.distributionRepository = distributionRepository;
         this.receiverRepository = receiverRepository;
         this.userRepository = userRepository;
+        this.userGroupMemberRepository = userGroupMemberRepository;
         this.notificationService = notificationService;
         this.objectMapper = new ObjectMapper();
     }
@@ -223,10 +227,14 @@ public class DistributionService {
                 }
                 break;
             case "POSITION":
-                // TODO: 根据岗位查询用户
+                // TODO: 根据岗位查询用户（需要添加岗位字段到User实体）
                 break;
             case "USER_GROUP":
-                // TODO: 根据用户组查询用户
+                // 根据用户组查询用户
+                for (Long groupId : targetIds) {
+                    List<Long> userIds = userGroupMemberRepository.findUserIdsByGroupId(groupId);
+                    receiverIds.addAll(userIds);
+                }
                 break;
         }
         
