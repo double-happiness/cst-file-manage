@@ -1,0 +1,77 @@
+Spring Boot 项目启动流程概览
+
+Spring Boot 启动大致可以分为几个阶段：
+
+启动 JVM & 加载主类
+
+JVM 启动，加载你的主类（这里是 CstFileManageApplication）。
+
+日志：
+
+Starting CstFileManageApplication using Java 17.0.11 with PID 1626
+
+
+初始化 Spring 应用上下文（ApplicationContext）
+
+Spring Boot 扫描 @SpringBootApplication、@ComponentScan 注解，注册 Bean。
+
+日志：
+
+Root WebApplicationContext: initialization completed in 753 ms
+
+
+扫描与注册 Spring Data Repositories（JPA / Redis 等）
+
+日志：
+
+Bootstrapping Spring Data JPA repositories in DEFAULT mode
+Found 14 JPA repository interfaces
+
+
+这时候 Spring 会把 domain.repository 下的接口扫描，生成对应的实现（动态代理），方便你在 Service 中直接注入使用。
+
+初始化数据库（JPA/Hibernate/Hikari）
+
+Hibernate 读取实体类，生成 SQL 映射，创建或修改表结构（根据 spring.jpa.hibernate.ddl-auto 配置）。
+
+日志：
+
+Hibernate: alter table approval_flows modify column applicable_file_types TEXT
+HikariPool-1 - Start completed.
+
+
+初始化内存/缓存相关组件（如 Redis）
+
+你日志里有：
+
+Finished Spring Data repository scanning in 5 ms. Found 0 Redis repository interfaces
+
+
+如果项目使用 Redis，这里会初始化 Redis 连接池和 Redis Repository Bean。
+
+启动嵌入式 Web 服务器（Tomcat / Jetty / Undertow）
+
+日志：
+
+Tomcat initialized with port 8080
+Tomcat started on port 8080
+
+
+Spring Boot 默认会启动 Tomcat 并监听端口。
+
+执行 CommandLineRunner / ApplicationRunner
+
+如果你的 Bean 实现了这些接口，会在容器启动完成后执行。
+
+日志里：
+
+开始初始化权限和角色...
+
+
+说明 PermissionInitService 实现了某个 Runner 接口，在应用启动完成后执行初始化逻辑。
+
+应用完全启动
+
+日志：
+
+Started CstFileManageApplication in 3.993 seconds

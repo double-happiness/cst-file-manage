@@ -41,11 +41,11 @@ public class ApprovalService {
     private final ObjectMapper objectMapper;
 
     public ApprovalService(DocumentRepository documentRepository,
-                          ApprovalFlowRepository approvalFlowRepository,
-                          ApprovalRecordRepository approvalRecordRepository,
-                          UserRepository userRepository,
-                          UserRoleRepository userRoleRepository,
-                          NotificationService notificationService) {
+                           ApprovalFlowRepository approvalFlowRepository,
+                           ApprovalRecordRepository approvalRecordRepository,
+                           UserRepository userRepository,
+                           UserRoleRepository userRoleRepository,
+                           NotificationService notificationService) {
         this.documentRepository = documentRepository;
         this.approvalFlowRepository = approvalFlowRepository;
         this.approvalRecordRepository = approvalRecordRepository;
@@ -86,7 +86,7 @@ public class ApprovalService {
             record.setApproverRoleId(Long.valueOf(step.get("roleId").toString()));
             record.setApproverRoleName(step.get("roleName").toString());
             record.setStatus(ApprovalStatus.PENDING);
-            
+
             // 第一个环节需要设置审批人（根据角色查找用户）
             if (i == 0) {
                 Long approverId = findApproverByRole(record.getApproverRoleId());
@@ -97,7 +97,7 @@ public class ApprovalService {
                         .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
                 record.setApproverId(approverId);
                 record.setApproverName(approver.getRealName());
-                
+
                 // 发送通知给第一个审批人
                 notificationService.sendApprovalNotification(approver, document);
             }
@@ -124,7 +124,7 @@ public class ApprovalService {
         }
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         // 查找当前审批记录
         ApprovalRecord record = approvalRecordRepository
@@ -142,7 +142,7 @@ public class ApprovalService {
             // 检查是否还有下一环节
             List<ApprovalRecord> nextSteps = approvalRecordRepository
                     .findCurrentStepRecords(documentId, ApprovalStatus.PENDING);
-            
+
             if (nextSteps.isEmpty()) {
                 // 所有环节都已完成，审批通过
                 document.setStatus(DocumentStatus.APPROVED);
@@ -188,14 +188,14 @@ public class ApprovalService {
      */
     private ApprovalFlow findApplicableApprovalFlow(Document document) {
         List<ApprovalFlow> flows = approvalFlowRepository.findByEnabledTrue();
-        
+
         for (ApprovalFlow flow : flows) {
             // 简化匹配逻辑，实际应该更复杂
             if (isFlowApplicable(flow, document)) {
                 return flow;
             }
         }
-        
+
         return null;
     }
 
@@ -212,7 +212,8 @@ public class ApprovalService {
      */
     private List<Map<String, Object>> parseApprovalSteps(String stepsJson) {
         try {
-            return objectMapper.readValue(stepsJson, new TypeReference<List<Map<String, Object>>>() {});
+            return objectMapper.readValue(stepsJson, new TypeReference<List<Map<String, Object>>>() {
+            });
         } catch (Exception e) {
             throw new BizException(ErrorCode.APPROVAL_FLOW_CONFIG_ERROR);
         }
@@ -227,7 +228,7 @@ public class ApprovalService {
         if (userIds.isEmpty()) {
             return null;
         }
-        
+
         // 返回第一个启用的用户
         for (Long userId : userIds) {
             User user = userRepository.findById(userId).orElse(null);
@@ -235,7 +236,7 @@ public class ApprovalService {
                 return userId;
             }
         }
-        
+
         return null;
     }
 

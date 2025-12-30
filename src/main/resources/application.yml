@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:mysql://10.200.100.49:3306/cst_file_manage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: 4ooC0rLsZC0yjzbr#
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
