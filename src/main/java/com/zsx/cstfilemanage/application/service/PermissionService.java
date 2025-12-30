@@ -106,7 +106,7 @@ public class PermissionService {
     @Transactional
     public void assignPermissionsToRole(Long roleId, List<Long> permissionIds) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1024, "角色不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.ROLE_NOT_FOUND));
 
         // 删除原有权限
         rolePermissionRepository.deleteByRoleId(roleId);
@@ -114,7 +114,7 @@ public class PermissionService {
         // 分配新权限
         for (Long permissionId : permissionIds) {
             Permission permission = permissionRepository.findById(permissionId)
-                    .orElseThrow(() -> new BizException(new ErrorCode(1025, "权限不存在")));
+                    .orElseThrow(() -> new BizException(ErrorCode.PERMISSION_NOT_FOUND));
 
             // 检查是否已存在
             if (!rolePermissionRepository.existsByRoleIdAndPermissionId(roleId, permissionId)) {
@@ -144,7 +144,7 @@ public class PermissionService {
     public Permission createPermission(Permission permission) {
         // 检查权限代码是否已存在
         if (permissionRepository.findByPermissionCode(permission.getPermissionCode()) != null) {
-            throw new BizException(new ErrorCode(1026, "权限代码已存在"));
+            throw new BizException(ErrorCode.PERMISSION_CODE_EXISTS);
         }
         return permissionRepository.save(permission);
     }
@@ -155,7 +155,7 @@ public class PermissionService {
     @Transactional
     public Permission updatePermission(Long permissionId, Permission permission) {
         Permission existing = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1025, "权限不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.PERMISSION_NOT_FOUND));
 
         if (permission.getPermissionName() != null) {
             existing.setPermissionName(permission.getPermissionName());

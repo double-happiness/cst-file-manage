@@ -6,6 +6,7 @@ import com.zsx.cstfilemanage.domain.cenum.FileType;
 import com.zsx.cstfilemanage.domain.model.entity.Document;
 import com.zsx.cstfilemanage.domain.repository.DocumentRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,13 +43,13 @@ public class FilePreviewService {
      */
     public Resource getPreviewResource(Long documentId) throws IOException {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         Path filePath = Paths.get(uploadDir, document.getFilePath());
         Resource resource = new UrlResource(filePath.toUri());
 
         if (!resource.exists()) {
-            throw new BizException(new ErrorCode(1021, "文件不存在"));
+            throw new BizException(ErrorCode.FILE_NOT_FOUND);
         }
 
         return resource;
@@ -59,16 +60,16 @@ public class FilePreviewService {
      */
     public byte[] getPdfPreview(Long documentId) throws IOException {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         if (document.getFileType() != FileType.PDF) {
-            throw new BizException(new ErrorCode(1022, "文件类型不是PDF"));
+            throw new BizException(ErrorCode.NOT_PDF_FILE);
         }
 
         Path filePath = Paths.get(uploadDir, document.getFilePath());
         File pdfFile = filePath.toFile();
 
-        try (PDDocument document_pdf = PDDocument.load(pdfFile)) {
+        try (PDDocument document_pdf = Loader.loadPDF(pdfFile)) {
             PDFRenderer pdfRenderer = new PDFRenderer(document_pdf);
             
             // 渲染第一页为图片
@@ -86,10 +87,10 @@ public class FilePreviewService {
      */
     public Resource getImagePreview(Long documentId) throws IOException {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         if (document.getFileType() != FileType.JPEG && document.getFileType() != FileType.PNG) {
-            throw new BizException(new ErrorCode(1023, "文件类型不是图片"));
+            throw new BizException(ErrorCode.NOT_IMAGE_FILE);
         }
 
         return getPreviewResource(documentId);

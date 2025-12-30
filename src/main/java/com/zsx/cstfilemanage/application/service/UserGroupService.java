@@ -39,7 +39,7 @@ public class UserGroupService {
     public UserGroup createUserGroup(UserGroup userGroup) {
         // 检查用户组代码是否已存在
         if (userGroupRepository.findByGroupCode(userGroup.getGroupCode()).isPresent()) {
-            throw new BizException(new ErrorCode(1029, "用户组代码已存在"));
+            throw new BizException(ErrorCode.USERGROUP_CODE_EXISTS);
         }
         return userGroupRepository.save(userGroup);
     }
@@ -50,7 +50,7 @@ public class UserGroupService {
     @Transactional
     public UserGroup updateUserGroup(Long groupId, UserGroup userGroup) {
         UserGroup existing = userGroupRepository.findById(groupId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1030, "用户组不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USERGROUP_NOT_FOUND));
 
         if (userGroup.getGroupName() != null) {
             existing.setGroupName(userGroup.getGroupName());
@@ -71,7 +71,7 @@ public class UserGroupService {
     @Transactional
     public void deleteUserGroup(Long groupId) {
         UserGroup userGroup = userGroupRepository.findById(groupId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1030, "用户组不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USERGROUP_NOT_FOUND));
 
         // 删除所有成员关联
         List<UserGroupMember> members = userGroupMemberRepository.findByGroupId(groupId);
@@ -86,11 +86,11 @@ public class UserGroupService {
     @Transactional
     public void addMembersToGroup(Long groupId, List<Long> userIds) {
         UserGroup group = userGroupRepository.findById(groupId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1030, "用户组不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USERGROUP_NOT_FOUND));
 
         for (Long userId : userIds) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new BizException(new ErrorCode(1010, "用户不存在")));
+                    .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
 
             // 检查是否已存在
             if (userGroupMemberRepository.findByGroupIdAndUserId(groupId, userId).isEmpty()) {
@@ -147,7 +147,7 @@ public class UserGroupService {
      */
     public UserGroup getUserGroupById(Long id) {
         return userGroupRepository.findById(id)
-                .orElseThrow(() -> new BizException(new ErrorCode(1030, "用户组不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USERGROUP_NOT_FOUND));
     }
 }
 

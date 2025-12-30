@@ -31,7 +31,7 @@ public class UserService {
     public User createUser(User user) {
         // 检查用户名是否已存在
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new BizException(new ErrorCode(1018, "用户名已存在"));
+            throw new BizException(ErrorCode.USERNAME_EXISTS);
         }
 
         // 加密密码
@@ -45,7 +45,7 @@ public class UserService {
     @Transactional
     public User updateUser(Long userId, User user) {
         User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1010, "用户不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
 
         // 更新字段
         if (user.getRealName() != null) {
@@ -79,7 +79,7 @@ public class UserService {
     @Transactional
     public void resetPassword(Long userId, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1010, "用户不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -97,7 +97,7 @@ public class UserService {
      */
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new BizException(new ErrorCode(1010, "用户不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
     }
 }
 

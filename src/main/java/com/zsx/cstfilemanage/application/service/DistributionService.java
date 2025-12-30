@@ -71,19 +71,19 @@ public class DistributionService {
         }
 
         User distributor = userRepository.findById(distributorId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1010, "用户不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
 
         // 验证文档状态
         for (Long documentId : documentIds) {
             Document document = documentRepository.findById(documentId)
-                    .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                    .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
             
             if (document.getStatus() != DocumentStatus.APPROVED) {
-                throw new BizException(new ErrorCode(1013, "只能下发已批准的文档"));
+                throw new BizException(ErrorCode.DOCUMENT_NOT_APPROVED);
             }
             
             if (!document.getIsCurrentVersion()) {
-                throw new BizException(new ErrorCode(1014, "只能下发当前有效版本的文档"));
+                throw new BizException(ErrorCode.NOT_CURRENT_VERSION);
             }
         }
 
@@ -101,7 +101,7 @@ public class DistributionService {
                 distribution.setTargetIds(objectMapper.writeValueAsString(targetIds));
                 distribution.setTargetNames(objectMapper.writeValueAsString(targetNames));
             } catch (Exception e) {
-                throw new BizException(new ErrorCode(1015, "下发对象数据格式错误"));
+                throw new BizException(ErrorCode.DISTRIBUTION_TARGET_ERROR);
             }
 
             distribution = distributionRepository.save(distribution);
@@ -111,7 +111,7 @@ public class DistributionService {
             List<User> receivers = new ArrayList<>();
             for (Long receiverId : receiverIds) {
                 User receiver = userRepository.findById(receiverId)
-                        .orElseThrow(() -> new BizException(new ErrorCode(1010, "接收人不存在")));
+                        .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
                 
                 DistributionReceiver receiverRecord = new DistributionReceiver();
                 receiverRecord.setDistributionId(distribution.getId());
@@ -141,7 +141,7 @@ public class DistributionService {
 
         for (Long documentId : documentIds) {
             Document document = documentRepository.findById(documentId)
-                    .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                    .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
             
             document.setStatus(DocumentStatus.RECALLED);
             documentRepository.save(document);
@@ -160,7 +160,7 @@ public class DistributionService {
 
         for (Long documentId : documentIds) {
             Document document = documentRepository.findById(documentId)
-                    .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                    .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
             
             document.setStatus(DocumentStatus.OBSOLETE);
             documentRepository.save(document);

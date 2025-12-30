@@ -32,7 +32,7 @@ public class RoleService {
     public Role createRole(Role role) {
         // 检查角色代码是否已存在
         if (roleRepository.findByRoleCode(role.getRoleCode()).isPresent()) {
-            throw new BizException(new ErrorCode(1027, "角色代码已存在"));
+            throw new BizException(ErrorCode.ROLE_CODE_EXISTS);
         }
         return roleRepository.save(role);
     }
@@ -43,7 +43,7 @@ public class RoleService {
     @Transactional
     public Role updateRole(Long roleId, Role role) {
         Role existing = roleRepository.findById(roleId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1024, "角色不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.ROLE_NOT_FOUND));
 
         if (role.getRoleName() != null) {
             existing.setRoleName(role.getRoleName());
@@ -64,12 +64,12 @@ public class RoleService {
     @Transactional
     public void deleteRole(Long roleId) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1024, "角色不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.ROLE_NOT_FOUND));
 
         // 检查是否有用户使用该角色
         List<UserRole> userRoles = userRoleRepository.findByRoleId(roleId);
         if (!userRoles.isEmpty()) {
-            throw new BizException(new ErrorCode(1028, "该角色正在被使用，无法删除"));
+            throw new BizException(ErrorCode.ROLE_IN_USE);
         }
 
         roleRepository.delete(role);
@@ -87,7 +87,7 @@ public class RoleService {
         // 分配新角色
         for (Long roleId : roleIds) {
             Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new BizException(new ErrorCode(1024, "角色不存在")));
+                    .orElseThrow(() -> new BizException(ErrorCode.ROLE_NOT_FOUND));
 
             UserRole userRole = new UserRole();
             userRole.setUserId(userId);
@@ -119,7 +119,7 @@ public class RoleService {
      */
     public Role getRoleById(Long id) {
         return roleRepository.findById(id)
-                .orElseThrow(() -> new BizException(new ErrorCode(1024, "角色不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.ROLE_NOT_FOUND));
     }
 }
 

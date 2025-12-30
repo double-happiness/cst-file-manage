@@ -31,14 +31,14 @@ public class AuthService {
      */
     public LoginResponse login(String username, String password) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BizException(new ErrorCode(1019, "用户名或密码错误")));
+                .orElseThrow(() -> new BizException(ErrorCode.LOGIN_FAILED));
 
         if (!user.getEnabled()) {
-            throw new BizException(new ErrorCode(1020, "用户已被禁用"));
+            throw new BizException(ErrorCode.USER_DISABLED);
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BizException(new ErrorCode(1019, "用户名或密码错误"));
+            throw new BizException(ErrorCode.LOGIN_FAILED);
         }
 
         // 生成Token

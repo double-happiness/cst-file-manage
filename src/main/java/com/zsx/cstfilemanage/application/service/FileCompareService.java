@@ -9,6 +9,7 @@ import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,9 +44,9 @@ public class FileCompareService {
      */
     public FileCompareResult compareDocuments(Long version1Id, Long version2Id) throws IOException {
         Document version1 = documentRepository.findById(version1Id)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "版本1不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND, "版本1不存在"));
         Document version2 = documentRepository.findById(version2Id)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "版本2不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND, "版本2不存在"));
 
         FileCompareResult result = new FileCompareResult();
         result.setVersion1(version1);
@@ -130,7 +131,7 @@ public class FileCompareService {
      * 提取PDF文本
      */
     private String extractPdfText(File pdfFile) throws IOException {
-        try (PDDocument document = PDDocument.load(pdfFile)) {
+        try (PDDocument document = Loader.loadPDF(pdfFile)) {
             PDFTextStripper stripper = new PDFTextStripper();
             return stripper.getText(document);
         }

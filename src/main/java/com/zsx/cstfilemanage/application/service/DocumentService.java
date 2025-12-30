@@ -74,7 +74,7 @@ public class DocumentService {
 
         // 检查文件编号是否已存在
         if (documentRepository.findByFileNumberAndIsCurrentVersionTrue(fileNumber).isPresent()) {
-            throw new BizException(new ErrorCode(1005, "文件编号已存在"));
+            throw new BizException(ErrorCode.FILE_NUMBER_EXISTS);
         }
 
         // 保存文件
@@ -163,7 +163,7 @@ public class DocumentService {
      */
     public Document getDocumentById(Long id) {
         return documentRepository.findById(id)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
     }
 }
 

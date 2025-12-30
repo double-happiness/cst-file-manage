@@ -61,16 +61,16 @@ public class ApprovalService {
     @Transactional
     public void submitForApproval(Long documentId) {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         if (document.getStatus() != DocumentStatus.DRAFT) {
-            throw new BizException(new ErrorCode(1007, "文档状态不正确，无法提交审批"));
+            throw new BizException(ErrorCode.DOCUMENT_STATUS_INVALID);
         }
 
         // 查找适用的审批流程
         ApprovalFlow approvalFlow = findApplicableApprovalFlow(document);
         if (approvalFlow == null) {
-            throw new BizException(new ErrorCode(1008, "未找到适用的审批流程"));
+            throw new BizException(ErrorCode.APPROVAL_FLOW_NOT_FOUND);
         }
 
         // 解析审批环节
@@ -91,10 +91,10 @@ public class ApprovalService {
             if (i == 0) {
                 Long approverId = findApproverByRole(record.getApproverRoleId());
                 if (approverId == null) {
-                    throw new BizException(new ErrorCode(1009, "未找到审批人"));
+                    throw new BizException(ErrorCode.APPROVER_NOT_FOUND);
                 }
                 User approver = userRepository.findById(approverId)
-                        .orElseThrow(() -> new BizException(new ErrorCode(1010, "审批人不存在")));
+                        .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
                 record.setApproverId(approverId);
                 record.setApproverName(approver.getRealName());
                 
@@ -129,7 +129,7 @@ public class ApprovalService {
         // 查找当前审批记录
         ApprovalRecord record = approvalRecordRepository
                 .findPendingByDocumentAndApprover(documentId, userId, ApprovalStatus.PENDING)
-                .orElseThrow(() -> new BizException(new ErrorCode(1011, "未找到待审批记录")));
+                .orElseThrow(() -> new BizException(ErrorCode.APPROVAL_RECORD_NOT_FOUND));
 
         // 更新审批记录
         record.setStatus(status);
@@ -214,7 +214,7 @@ public class ApprovalService {
         try {
             return objectMapper.readValue(stepsJson, new TypeReference<List<Map<String, Object>>>() {});
         } catch (Exception e) {
-            throw new BizException(new ErrorCode(1012, "审批流程配置错误"));
+            throw new BizException(ErrorCode.APPROVAL_FLOW_CONFIG_ERROR);
         }
     }
 

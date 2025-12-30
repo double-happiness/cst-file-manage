@@ -9,6 +9,8 @@ import com.zsx.cstfilemanage.infrastructure.security.SecurityContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.io.IOException;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,10 +35,10 @@ public class VersionService {
      */
     @Transactional
     public Document createNewVersion(Long documentId,
-                                    String newVersion,
-                                    String changeDescription,
-                                    String changeReason,
-                                    LocalDateTime changeDate) {
+                                     String newVersion,
+                                     String changeDescription,
+                                     String changeReason,
+                                     LocalDateTime changeDate) {
         Long userId = SecurityContext.getCurrentUserId();
         if (userId == null) {
             throw new BizException(ErrorCode.UNAUTHORIZED);
@@ -44,12 +46,12 @@ public class VersionService {
 
         // 获取当前版本
         Document currentVersion = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         // 检查版本号是否已存在
         if (documentRepository.findByFileNumberAndVersion(
                 currentVersion.getFileNumber(), newVersion).isPresent()) {
-            throw new BizException(new ErrorCode(1016, "版本号已存在"));
+            throw new BizException(ErrorCode.VERSION_EXISTS);
         }
 
         // 创建新版本文档（复制当前版本信息）
@@ -95,10 +97,10 @@ public class VersionService {
         }
 
         Document versionDoc = documentRepository.findById(versionId)
-                .orElseThrow(() -> new BizException(new ErrorCode(1006, "文档不存在")));
+                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         if (versionDoc.getIsCurrentVersion()) {
-            throw new BizException(new ErrorCode(1017, "该版本已经是当前版本"));
+            throw new BizException(ErrorCode.VERSION_ALREADY_CURRENT);
         }
 
         // 将当前版本设为非当前版本
@@ -124,7 +126,7 @@ public class VersionService {
      */
     public VersionComparisonResult compareVersions(Long version1Id, Long version2Id) throws IOException {
         FileCompareService.FileCompareResult compareResult = fileCompareService.compareDocuments(version1Id, version2Id);
-        
+
         VersionComparisonResult result = new VersionComparisonResult();
         result.setVersion1(compareResult.getVersion1());
         result.setVersion2(compareResult.getVersion2());
@@ -144,14 +146,37 @@ public class VersionService {
         private boolean hasDifferences;
 
         // Getters and Setters
-        public Document getVersion1() { return version1; }
-        public void setVersion1(Document version1) { this.version1 = version1; }
-        public Document getVersion2() { return version2; }
-        public void setVersion2(Document version2) { this.version2 = version2; }
-        public String getDifferences() { return differences; }
-        public void setDifferences(String differences) { this.differences = differences; }
-        public boolean isHasDifferences() { return hasDifferences; }
-        public void setHasDifferences(boolean hasDifferences) { this.hasDifferences = hasDifferences; }
+        public Document getVersion1() {
+            return version1;
+        }
+
+        public void setVersion1(Document version1) {
+            this.version1 = version1;
+        }
+
+        public Document getVersion2() {
+            return version2;
+        }
+
+        public void setVersion2(Document version2) {
+            this.version2 = version2;
+        }
+
+        public String getDifferences() {
+            return differences;
+        }
+
+        public void setDifferences(String differences) {
+            this.differences = differences;
+        }
+
+        public boolean isHasDifferences() {
+            return hasDifferences;
+        }
+
+        public void setHasDifferences(boolean hasDifferences) {
+            this.hasDifferences = hasDifferences;
+        }
     }
 }
 

@@ -6,7 +6,7 @@ spring:
       max-file-size: 50MB   # 最大单文件上传限制
       max-request-size: 200MB # 最大请求体
   datasource:
-    url: jdbc:mysql://localhost:3306/cst_file_manage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://10.200.100.49:3306/cst_file_manage?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -24,14 +24,6 @@ spring:
       port: 6379
       password: ""
       database: 0
-file:
-  upload-dir: uploads
-# JWT配置
-jwt:
-  secret: your-secret-key-should-be-at-least-256-bits-long-for-security-please-change-in-production
-  expiration: 86400000  # 24小时，单位：毫秒
-# 邮件配置
-spring:
   mail:
     host: smtp.example.com
     port: 587
@@ -44,6 +36,12 @@ spring:
           starttls:
             enable: true
     from: noreply@example.com
+file:
+  upload-dir: uploads
+# JWT配置
+jwt:
+  secret: your-secret-key-should-be-at-least-256-bits-long-for-security-please-change-in-production
+  expiration: 86400000  # 24小时，单位：毫秒
 # 通知配置
 notification:
   email:

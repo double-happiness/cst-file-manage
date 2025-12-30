@@ -32,7 +32,7 @@ public class PermissionAspect {
         
         if (!permissionService.hasPermission(permissionCode)) {
             log.warn("用户 {} 没有权限: {}", SecurityContext.getCurrentUserId(), permissionCode);
-            throw new BizException(new ErrorCode(1031, "没有权限: " + permissionCode));
+            throw new BizException(ErrorCode.PERMISSION_DENIED, "没有权限: " + permissionCode);
         }
     }
 }
