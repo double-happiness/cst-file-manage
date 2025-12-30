@@ -5,12 +5,14 @@ import com.zsx.cstfilemanage.common.exception.ErrorCode;
 import com.zsx.cstfilemanage.domain.model.entity.User;
 import com.zsx.cstfilemanage.domain.repository.UserRepository;
 import com.zsx.cstfilemanage.infrastructure.security.JwtTokenProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
  * 认证服务
  */
+@Slf4j
 @Service
 public class AuthService {
 
@@ -19,8 +21,8 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
 
     public AuthService(UserRepository userRepository,
-                      PasswordEncoder passwordEncoder,
-                      JwtTokenProvider tokenProvider) {
+                       PasswordEncoder passwordEncoder,
+                       JwtTokenProvider tokenProvider) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
@@ -32,10 +34,10 @@ public class AuthService {
     public LoginResponse login(String username, String password) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BizException(ErrorCode.LOGIN_FAILED));
-
         if (!user.getEnabled()) {
             throw new BizException(ErrorCode.USER_DISABLED);
         }
+        // log.info("login user: {}, pass: {}", user, passwordEncoder.encode(user.getPassword()));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BizException(ErrorCode.LOGIN_FAILED);
@@ -65,16 +67,45 @@ public class AuthService {
         private Long expiresIn;
 
         // Getters and Setters
-        public String getToken() { return token; }
-        public void setToken(String token) { this.token = token; }
-        public Long getUserId() { return userId; }
-        public void setUserId(Long userId) { this.userId = userId; }
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getRealName() { return realName; }
-        public void setRealName(String realName) { this.realName = realName; }
-        public Long getExpiresIn() { return expiresIn; }
-        public void setExpiresIn(Long expiresIn) { this.expiresIn = expiresIn; }
+        public String getToken() {
+            return token;
+        }
+
+        public void setToken(String token) {
+            this.token = token;
+        }
+
+        public Long getUserId() {
+            return userId;
+        }
+
+        public void setUserId(Long userId) {
+            this.userId = userId;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getRealName() {
+            return realName;
+        }
+
+        public void setRealName(String realName) {
+            this.realName = realName;
+        }
+
+        public Long getExpiresIn() {
+            return expiresIn;
+        }
+
+        public void setExpiresIn(Long expiresIn) {
+            this.expiresIn = expiresIn;
+        }
     }
 }
 

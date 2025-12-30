@@ -29,9 +29,9 @@ public class PermissionAspect {
     @Before("@annotation(requiresPermission)")
     public void checkPermission(JoinPoint joinPoint, RequiresPermission requiresPermission) {
         String permissionCode = requiresPermission.value();
-        
+        log.info("checkPermission permissionCode: {}", permissionCode);
         if (!permissionService.hasPermission(permissionCode)) {
-            log.warn("用户 {} 没有权限: {}", SecurityContext.getCurrentUserId(), permissionCode);
+            log.warn("用户 {} 没有权限1: {}", SecurityContext.getCurrentUserId(), permissionCode);
             throw new BizException(ErrorCode.PERMISSION_DENIED, "没有权限: " + permissionCode);
         }
     }

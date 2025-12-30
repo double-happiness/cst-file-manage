@@ -39,7 +39,7 @@ public class PermissionInitService implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         log.info("开始初始化权限和角色...");
-        initPermissions();
+        // initPermissions();
         initRoles();
         log.info("权限和角色初始化完成");
     }
@@ -139,14 +139,13 @@ public class PermissionInitService implements CommandLineRunner {
 
         // 为角色分配权限
         assignPermissionsToRole(adminRole, ".*"); // 管理员拥有所有权限
-        
-        assignPermissionsToRole(designerRole, 
-            "document:upload", "document:view", "document:download", 
+        assignPermissionsToRole(designerRole,
+            "document:upload", "document:view", "document:download",
             "document:modify", "approval:submit", "version:create", "version:view");
-        
+
         assignPermissionsToRole(approverRole,
             "document:view", "approval:approve", "approval:view");
-        
+
         assignPermissionsToRole(viewerRole,
             "document:view", "document:download", "version:view");
     }

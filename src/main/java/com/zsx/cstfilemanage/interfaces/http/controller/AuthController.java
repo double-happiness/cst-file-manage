@@ -4,6 +4,7 @@ import com.zsx.cstfilemanage.application.service.AuthService;
 import com.zsx.cstfilemanage.common.response.ApiResponse;
 import com.zsx.cstfilemanage.interfaces.http.request.LoginRequest;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v1/auth")
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;

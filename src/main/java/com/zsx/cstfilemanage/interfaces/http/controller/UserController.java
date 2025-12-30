@@ -23,7 +23,7 @@ public class UserController {
     /**
      * 创建用户
      */
-    @PostMapping
+    @PostMapping("/singnUp")
     public ApiResponse<User> createUser(@RequestBody User user) {
         User created = userService.createUser(user);
         return ApiResponse.success(created);

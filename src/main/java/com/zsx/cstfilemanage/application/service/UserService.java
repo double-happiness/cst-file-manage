@@ -4,6 +4,7 @@ import com.zsx.cstfilemanage.common.exception.BizException;
 import com.zsx.cstfilemanage.common.exception.ErrorCode;
 import com.zsx.cstfilemanage.domain.model.entity.User;
 import com.zsx.cstfilemanage.domain.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import java.util.List;
 /**
  * 用户服务
  */
+@Slf4j
 @Service
 public class UserService {
 
@@ -33,7 +35,7 @@ public class UserService {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new BizException(ErrorCode.USERNAME_EXISTS);
         }
-
+        log.info("createUser raw pass: {}, encode pass: {}", user.getPassword(), passwordEncoder.encode(user.getPassword()));
         // 加密密码
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
