@@ -6,6 +6,7 @@ import com.zsx.cstfilemanage.domain.cenum.ApprovalStatus;
 import com.zsx.cstfilemanage.domain.model.entity.ApprovalRecord;
 import com.zsx.cstfilemanage.interfaces.http.request.ApprovalRequest;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/approvals")
+@Slf4j
 public class ApprovalController {
 
     private final ApprovalService approvalService;
@@ -28,8 +30,17 @@ public class ApprovalController {
      */
     @PostMapping("/submit/{documentId}")
     public ApiResponse<Void> submitForApproval(@PathVariable Long documentId) {
-        approvalService.submitForApproval(documentId);
-        return ApiResponse.success(null);
+        log.debug("=== 提交审批接口调用开始 ===");
+        log.info("提交审批请求 - 文档ID: {}", documentId);
+        try {
+            approvalService.submitForApproval(documentId);
+            log.info("提交审批成功 - 文档ID: {}", documentId);
+            log.debug("=== 提交审批接口调用结束 ===");
+            return ApiResponse.success(null);
+        } catch (Exception e) {
+            log.error("提交审批失败 - 文档ID: {}, 错误信息: {}", documentId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -39,12 +50,22 @@ public class ApprovalController {
     public ApiResponse<Void> approveDocument(
             @PathVariable Long documentId,
             @Valid @RequestBody ApprovalRequest request) {
-        approvalService.approveDocument(
-                documentId,
-                request.getStatus(),
-                request.getComment()
-        );
-        return ApiResponse.success(null);
+        log.debug("=== 审批文档接口调用开始 ===");
+        log.info("审批文档请求 - 文档ID: {}, 审批状态: {}, 审批意见: {}", 
+                documentId, request.getStatus(), request.getComment());
+        try {
+            approvalService.approveDocument(
+                    documentId,
+                    request.getStatus(),
+                    request.getComment()
+            );
+            log.info("审批文档成功 - 文档ID: {}, 审批状态: {}", documentId, request.getStatus());
+            log.debug("=== 审批文档接口调用结束 ===");
+            return ApiResponse.success(null);
+        } catch (Exception e) {
+            log.error("审批文档失败 - 文档ID: {}, 错误信息: {}", documentId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -52,8 +73,17 @@ public class ApprovalController {
      */
     @GetMapping("/progress/{documentId}")
     public ApiResponse<List<ApprovalRecord>> getApprovalProgress(@PathVariable Long documentId) {
-        List<ApprovalRecord> records = approvalService.getApprovalProgress(documentId);
-        return ApiResponse.success(records);
+        log.debug("=== 查询审批进度接口调用开始 ===");
+        log.info("查询审批进度请求 - 文档ID: {}", documentId);
+        try {
+            List<ApprovalRecord> records = approvalService.getApprovalProgress(documentId);
+            log.info("查询审批进度成功 - 文档ID: {}, 审批记录数: {}", documentId, records.size());
+            log.debug("=== 查询审批进度接口调用结束 ===");
+            return ApiResponse.success(records);
+        } catch (Exception e) {
+            log.error("查询审批进度失败 - 文档ID: {}, 错误信息: {}", documentId, e.getMessage(), e);
+            throw e;
+        }
     }
 }
 

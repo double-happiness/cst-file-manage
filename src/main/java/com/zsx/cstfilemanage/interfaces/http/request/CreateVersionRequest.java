@@ -21,7 +21,7 @@ public class CreateVersionRequest {
     private String changeReason;
 
     @NotNull(message = "修改日期不能为空")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime changeDate;
 }
 

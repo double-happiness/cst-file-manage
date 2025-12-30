@@ -10,7 +10,7 @@ spring:
     username: root
     password: 4ooC0rLsZC0yjzbr#
     driver-class-name: com.mysql.cj.jdbc.Driver
-#  jpa:
+  jpa:
 #    hibernate:
 #      ddl-auto: update
     show-sql: true
@@ -36,6 +36,11 @@ spring:
           starttls:
             enable: true
     from: noreply@example.com
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
 file:
   upload-dir: uploads
 # JWT配置

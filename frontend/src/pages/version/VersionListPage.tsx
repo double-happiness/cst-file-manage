@@ -22,9 +22,13 @@ export default function VersionListPage() {
     setLoading(true)
     try {
       const res = await versionApi.getVersions(fileNumber)
-      setVersions(res.data.data)
+      // 后端返回格式: ApiResponse<List<Document>>，res.data 就是 List<Document>
+      const versionList = Array.isArray(res.data) ? res.data : []
+      setVersions(versionList)
     } catch (error) {
       console.error('加载版本列表失败:', error)
+      message.error('加载版本列表失败')
+      setVersions([])
     } finally {
       setLoading(false)
     }

@@ -32,19 +32,29 @@ public class AuthService {
      * 登录
      */
     public LoginResponse login(String username, String password) {
+        log.debug("=== AuthService.login 开始 ===");
+        log.info("用户登录请求 - 用户名: {}", username);
+        
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BizException(ErrorCode.LOGIN_FAILED));
+                .orElseThrow(() -> {
+                    log.warn("用户登录失败 - 用户不存在: {}", username);
+                    return new BizException(ErrorCode.LOGIN_FAILED);
+                });
+        
         if (!user.getEnabled()) {
+            log.warn("用户登录失败 - 用户已禁用: {}", username);
             throw new BizException(ErrorCode.USER_DISABLED);
         }
-        // log.info("login user: {}, pass: {}", user, passwordEncoder.encode(user.getPassword()));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            log.warn("用户登录失败 - 密码错误: {}", username);
             throw new BizException(ErrorCode.LOGIN_FAILED);
         }
 
+        log.debug("用户登录 - 密码验证通过，开始生成Token");
         // 生成Token
         String token = tokenProvider.generateToken(user.getId(), user.getUsername(), user.getRealName());
+        log.debug("用户登录 - Token生成成功");
 
         LoginResponse response = new LoginResponse();
         response.setToken(token);
@@ -53,6 +63,9 @@ public class AuthService {
         response.setRealName(user.getRealName());
         response.setExpiresIn(86400L); // 24小时
 
+        log.info("用户登录成功 - 用户ID: {}, 用户名: {}, 真实姓名: {}", 
+                user.getId(), user.getUsername(), user.getRealName());
+        log.debug("=== AuthService.login 结束 ===");
         return response;
     }
 

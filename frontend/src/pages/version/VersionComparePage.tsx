@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Select, Button, Space, Typography, Divider } from 'antd'
+import { Card, Select, Button, Space, Typography, Divider, message } from 'antd'
 import { BranchesOutlined } from '@ant-design/icons'
 import { versionApi } from '../../api/version'
 import { documentApi } from '../../api/document'
@@ -17,23 +17,29 @@ export default function VersionComparePage() {
   const loadVersions = async (fileNumber: string) => {
     try {
       const res = await versionApi.getVersions(fileNumber)
-      setVersions(res.data.data)
+      // 后端返回格式: ApiResponse<List<Document>>，res.data 就是 List<Document>
+      const versionList = Array.isArray(res.data) ? res.data : []
+      setVersions(versionList)
     } catch (error) {
       console.error('加载版本列表失败:', error)
+      setVersions([])
     }
   }
 
   const handleCompare = async () => {
     if (!version1Id || !version2Id) {
+      message.warning('请选择两个版本进行对比')
       return
     }
 
     setLoading(true)
     try {
       const res = await versionApi.compare(version1Id, version2Id)
-      setCompareResult(res.data.data)
+      // 后端返回格式: ApiResponse<VersionComparisonResult>，res.data 就是 VersionComparisonResult
+      setCompareResult(res.data)
     } catch (error) {
       console.error('版本对比失败:', error)
+      message.error('版本对比失败')
     } finally {
       setLoading(false)
     }
@@ -65,7 +71,7 @@ export default function VersionComparePage() {
                 value={version1Id}
                 onChange={setVersion1Id}
               >
-                {versions.map((v) => (
+                {(versions || []).map((v) => (
                   <Select.Option key={v.id} value={v.id}>
                     {v.version}
                   </Select.Option>
@@ -78,7 +84,7 @@ export default function VersionComparePage() {
                 value={version2Id}
                 onChange={setVersion2Id}
               >
-                {versions.map((v) => (
+                {(versions || []).map((v) => (
                   <Select.Option key={v.id} value={v.id}>
                     {v.version}
                   </Select.Option>

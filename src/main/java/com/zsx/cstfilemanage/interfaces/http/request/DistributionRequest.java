@@ -28,7 +28,7 @@ public class DistributionRequest {
 
     private String distributionNote;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime effectiveDate;
 }
 

@@ -41,8 +41,8 @@ public class OperationLogController {
     public ApiResponse<Page<OperationLog>> searchLogs(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) OperationType operationType,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime,
             @PageableDefault(size = 20) Pageable pageable) {
         Page<OperationLog> logs = operationLogService.searchLogs(userId, operationType, startTime, endTime, pageable);
         return ApiResponse.success(logs);
@@ -55,8 +55,8 @@ public class OperationLogController {
     public ResponseEntity<byte[]> exportLogs(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) OperationType operationType,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) throws IOException {
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) throws IOException {
         byte[] excelBytes = logExportService.exportLogsToExcel(userId, operationType, startTime, endTime);
         
         String filename = "操作日志_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + ".xlsx";

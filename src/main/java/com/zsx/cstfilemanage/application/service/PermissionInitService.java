@@ -2,15 +2,22 @@ package com.zsx.cstfilemanage.application.service;
 
 import com.zsx.cstfilemanage.domain.model.entity.Permission;
 import com.zsx.cstfilemanage.domain.model.entity.Role;
+import com.zsx.cstfilemanage.domain.model.entity.User;
+import com.zsx.cstfilemanage.domain.model.entity.UserRole;
 import com.zsx.cstfilemanage.domain.repository.PermissionRepository;
 import com.zsx.cstfilemanage.domain.repository.RoleRepository;
+import com.zsx.cstfilemanage.domain.repository.UserRepository;
+import com.zsx.cstfilemanage.domain.repository.UserRoleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * 权限初始化服务
@@ -21,6 +28,9 @@ import java.util.Map;
 public class PermissionInitService implements CommandLineRunner {
 
     private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRoleRepository userRoleRepository;
     private final RoleRepository roleRepository;
     private final PermissionService permissionService;
     private final RoleService roleService;
@@ -28,20 +38,27 @@ public class PermissionInitService implements CommandLineRunner {
     public PermissionInitService(PermissionRepository permissionRepository,
                                  RoleRepository roleRepository,
                                  PermissionService permissionService,
-                                 RoleService roleService) {
+                                 RoleService roleService,
+                                 UserRepository userRepository,
+                                 PasswordEncoder passwordEncoder,
+                                 UserRoleRepository userRoleRepository) {
         this.permissionRepository = permissionRepository;
         this.roleRepository = roleRepository;
         this.permissionService = permissionService;
         this.roleService = roleService;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userRoleRepository = userRoleRepository;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
-        log.info("开始初始化权限和角色...");
-        // initPermissions();
-        initRoles();
-        log.info("权限和角色初始化完成");
+//        log.info("开始初始化权限和角色...");
+//        initPermissions();
+//        initRoles();
+//        initUsers();
+//        log.info("权限和角色初始化完成");
     }
 
     /**
@@ -106,8 +123,8 @@ public class PermissionInitService implements CommandLineRunner {
     /**
      * 创建权限（如果不存在）
      */
-    private void createPermissionIfNotExists(String code, String name, String description, 
-                                            String type, Long parentId, Map<String, Permission> permissionMap) {
+    private void createPermissionIfNotExists(String code, String name, String description,
+                                             String type, Long parentId, Map<String, Permission> permissionMap) {
         if (permissionRepository.findByPermissionCode(code) == null) {
             Permission permission = new Permission();
             permission.setPermissionCode(code);
@@ -127,27 +144,53 @@ public class PermissionInitService implements CommandLineRunner {
     private void initRoles() {
         // 系统管理员角色
         Role adminRole = createRoleIfNotExists("ADMIN", "系统管理员", "拥有所有权限");
-        
+
         // 设计人员角色
         Role designerRole = createRoleIfNotExists("DESIGNER", "设计人员", "设计人员角色");
-        
+
         // 审批人员角色
         Role approverRole = createRoleIfNotExists("APPROVER", "审批人员", "审批人员角色");
-        
+
         // 普通查看人员角色
         Role viewerRole = createRoleIfNotExists("VIEWER", "普通查看人员", "只能查看文档");
 
         // 为角色分配权限
         assignPermissionsToRole(adminRole, ".*"); // 管理员拥有所有权限
         assignPermissionsToRole(designerRole,
-            "document:upload", "document:view", "document:download",
-            "document:modify", "approval:submit", "version:create", "version:view");
+                "document:upload", "document:view", "document:download",
+                "document:modify", "approval:submit", "version:create", "version:view");
 
         assignPermissionsToRole(approverRole,
-            "document:view", "approval:approve", "approval:view");
+                "document:view", "approval:approve", "approval:view");
 
         assignPermissionsToRole(viewerRole,
-            "document:view", "document:download", "version:view");
+                "document:view", "document:download", "version:view");
+    }
+
+    /**
+     * 初始化角色
+     */
+    private void initUsers() {
+        User user = new User();
+        user.setUsername("admin");
+        Optional<User> user1 = userRepository.findByUsername(user.getUsername());
+        if (user1.isPresent()) {
+            // 用户存在，直接返回
+            return;
+        }
+        user.setPassword(passwordEncoder.encode("admin"));
+        user.setDepartmentId(1L);
+        user.setDepartmentName("系统管理部");
+        user.setEmail("admin@example.com");
+        user.setEnabled(Boolean.TRUE);
+        user.setPhone("13800000000");
+        user.setPosition("管理员");
+        user.setRealName("系统管理员");
+        userRepository.save(user);
+        UserRole userRole = new UserRole();
+        userRole.setRoleId(1L);
+        userRole.setUserId(user.getId());
+        userRoleRepository.save(userRole);
     }
 
     /**

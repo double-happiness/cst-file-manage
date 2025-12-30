@@ -26,7 +26,7 @@ const menuItems: MenuProps['items'] = [
     icon: <FileTextOutlined />,
     label: '文档管理',
     children: [
-      { key: '/documents', label: '文档列表' },
+      { key: '/documents/list', label: '文档列表' },
       { key: '/documents/upload', label: '上传文档' },
     ],
   },

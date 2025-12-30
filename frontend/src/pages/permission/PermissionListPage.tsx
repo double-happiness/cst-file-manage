@@ -19,9 +19,16 @@ export default function PermissionListPage() {
     setLoading(true)
     try {
       const res = await permissionApi.getAll()
-      setPermissions(res.data.data)
+      // 后端返回格式: ApiResponse<List<Permission>>，res.data 就是 List<Permission>
+      const permissionList = Array.isArray(res.data) ? res.data : []
+      setPermissions(permissionList)
+      if (permissionList.length === 0) {
+        console.warn('权限列表为空')
+      }
     } catch (error) {
       console.error('加载权限列表失败:', error)
+      message.error('加载权限列表失败')
+      setPermissions([])
     } finally {
       setLoading(false)
     }

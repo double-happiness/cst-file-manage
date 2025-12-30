@@ -26,8 +26,18 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ApiResponse<AuthService.LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthService.LoginResponse response = authService.login(request.getUsername(), request.getPassword());
-        return ApiResponse.success(response);
+        log.debug("=== 用户登录接口调用开始 ===");
+        log.info("用户登录请求 - 用户名: {}", request.getUsername());
+        try {
+            AuthService.LoginResponse response = authService.login(request.getUsername(), request.getPassword());
+            log.info("用户登录成功 - 用户ID: {}, 用户名: {}, 真实姓名: {}", 
+                    response.getUserId(), response.getUsername(), response.getRealName());
+            log.debug("=== 用户登录接口调用结束 ===");
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            log.error("用户登录失败 - 用户名: {}, 错误信息: {}", request.getUsername(), e.getMessage(), e);
+            throw e;
+        }
     }
 }
 

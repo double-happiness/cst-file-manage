@@ -57,32 +57,49 @@ public class DocumentService {
                                    String version,
                                    LocalDateTime compileDate,
                                    String description) throws IOException {
+        log.debug("=== DocumentService.uploadDocument 开始 ===");
+        log.info("上传文档 - 文件编号: {}, 文件名称: {}, 版本: {}, 文件大小: {} bytes", 
+                fileNumber, fileName, version, file.getSize());
+        
         // 获取当前用户
         Long userId = SecurityContext.getCurrentUserId();
         if (userId == null) {
+            log.error("上传文档失败 - 用户未授权");
             throw new BizException(ErrorCode.UNAUTHORIZED);
         }
+        log.debug("上传文档 - 当前用户ID: {}, 用户名: {}", userId, SecurityContext.getCurrentUserName());
 
         // 验证文件格式
         String originalFilename = file.getOriginalFilename();
         String extension = FilenameUtils.getExtension(originalFilename);
         FileType fileType = FileType.fromExtension(extension);
+        log.info("上传文档 - 原始文件名: {}, 扩展名: {}, 文件类型: {}", originalFilename, extension, fileType);
         
         if (!fileTypeValidator.isAllowed(fileType, extension)) {
+            log.warn("上传文档失败 - 文件类型不允许: {}, 扩展名: {}", fileType, extension);
             throw new BizException(ErrorCode.FILE_TYPE_NOT_ALLOWED);
         }
 
         // 检查文件编号是否已存在
         if (documentRepository.findByFileNumberAndIsCurrentVersionTrue(fileNumber).isPresent()) {
+            log.warn("上传文档失败 - 文件编号已存在: {}", fileNumber);
             throw new BizException(ErrorCode.FILE_NUMBER_EXISTS);
         }
 
         // 保存文件
+        log.debug("上传文档 - 开始保存文件");
         String objectKey = saveFile(file, fileType);
+        log.info("上传文档 - 文件保存成功, objectKey: {}", objectKey);
         
         // 生成缩略图
+        log.debug("上传文档 - 开始生成缩略图");
         String thumbnailPath = generateThumbnail(file, objectKey);
-
+        if (thumbnailPath != null) {
+            log.debug("上传文档 - 缩略图生成成功: {}", thumbnailPath);
+        } else {
+            log.debug("上传文档 - 未生成缩略图（非图片类型）");
+        }
+        
         // 创建文档实体
         Document document = new Document();
         document.setFileNumber(fileNumber);
@@ -103,28 +120,41 @@ public class DocumentService {
         document.setIsCurrentVersion(true);
         document.setCreateUserId(userId);
         document.setUpdateUserId(userId);
-
-        return documentRepository.save(document);
+        
+        Document saved = documentRepository.save(document);
+        log.info("上传文档成功 - 文档ID: {}, 文件编号: {}, 文件名称: {}", 
+                saved.getId(), saved.getFileNumber(), saved.getFileName());
+        log.debug("=== DocumentService.uploadDocument 结束 ===");
+        return saved;
     }
 
     /**
      * 保存文件
      */
     private String saveFile(MultipartFile file, FileType fileType) throws IOException {
-        // 创建上传目录
-        Path uploadPath = Paths.get(uploadDir, fileType.name().toLowerCase());
+
+        // ⭐ 项目启动目录（不是 Tomcat）
+        String projectDir = System.getProperty("user.dir");
+
+        Path uploadPath = Paths.get(
+                projectDir,
+                uploadDir,
+                fileType.name().toLowerCase()
+        );
+
+        log.info("saveFile projectDir:{}, uploadPath: {}", projectDir, uploadPath);
+
         Files.createDirectories(uploadPath);
 
-        // 生成唯一文件名
         String originalFilename = file.getOriginalFilename();
         String extension = FilenameUtils.getExtension(originalFilename);
-        String uniqueFilename = UUID.randomUUID().toString() + "." + extension;
+        String uniqueFilename = UUID.randomUUID() + "." + extension;
+
         Path filePath = uploadPath.resolve(uniqueFilename);
 
-        // 保存文件
+        // ⭐ 现在 transferTo 写的是真实磁盘路径
         file.transferTo(filePath.toFile());
 
-        // 返回相对路径作为objectKey
         return fileType.name().toLowerCase() + "/" + uniqueFilename;
     }
 
@@ -162,8 +192,19 @@ public class DocumentService {
      * 根据ID查询文档
      */
     public Document getDocumentById(Long id) {
-        return documentRepository.findById(id)
-                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
+        log.debug("=== DocumentService.getDocumentById 开始 ===");
+        log.info("查询文档 - 文档ID: {}", id);
+        
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("查询文档失败 - 文档不存在: {}", id);
+                    return new BizException(ErrorCode.DOCUMENT_NOT_FOUND);
+                });
+        
+        log.info("查询文档成功 - 文档ID: {}, 文件编号: {}, 文件名称: {}", 
+                document.getId(), document.getFileNumber(), document.getFileName());
+        log.debug("=== DocumentService.getDocumentById 结束 ===");
+        return document;
     }
 }
 

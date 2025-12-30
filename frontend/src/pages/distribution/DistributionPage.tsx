@@ -33,27 +33,45 @@ export default function DistributionPage() {
         page: 0,
         size: 100,
       })
-      setDocuments(res.data.data.content || [])
+      // 后端返回格式可能是分页对象或数组，需要统一处理
+      const responseData = res.data
+      if (responseData && typeof responseData === 'object' && 'content' in responseData) {
+        // 分页格式: { content: [], totalElements: 0, totalPages: 0 }
+        setDocuments(Array.isArray(responseData.content) ? responseData.content : [])
+      } else if (Array.isArray(responseData)) {
+        // 直接数组格式
+        setDocuments(responseData)
+      } else {
+        setDocuments([])
+      }
     } catch (error) {
       console.error('加载文档失败:', error)
+      message.error('加载文档失败')
+      setDocuments([])
     }
   }
 
   const loadUsers = async () => {
     try {
       const res = await userApi.getAll()
-      setUsers(res.data.data)
+      // 后端返回格式: ApiResponse<List<User>>，res.data 就是 List<User>
+      const userList = Array.isArray(res.data) ? res.data : []
+      setUsers(userList)
     } catch (error) {
       console.error('加载用户失败:', error)
+      setUsers([])
     }
   }
 
   const loadUserGroups = async () => {
     try {
       const res = await userGroupApi.getAll()
-      setUserGroups(res.data.data)
+      // 后端返回格式: ApiResponse<List<UserGroup>>，res.data 就是 List<UserGroup>
+      const groupList = Array.isArray(res.data) ? res.data : []
+      setUserGroups(groupList)
     } catch (error) {
       console.error('加载用户组失败:', error)
+      setUserGroups([])
     }
   }
 
@@ -119,9 +137,9 @@ export default function DistributionPage() {
 
   const getDataSource = () => {
     if (targetType === 'USER') {
-      return users.map((u) => ({ key: String(u.id), title: u.realName }))
+      return (users || []).map((u) => ({ key: String(u.id), title: u.realName }))
     } else if (targetType === 'USER_GROUP') {
-      return userGroups.map((g) => ({ key: String(g.id), title: g.groupName }))
+      return (userGroups || []).map((g) => ({ key: String(g.id), title: g.groupName }))
     }
     return []
   }
@@ -130,10 +148,10 @@ export default function DistributionPage() {
     setTargetKeys(keys)
     const names = keys.map((key) => {
       if (targetType === 'USER') {
-        const user = users.find((u) => String(u.id) === key)
+        const user = (users || []).find((u) => String(u.id) === key)
         return user?.realName || ''
       } else if (targetType === 'USER_GROUP') {
-        const group = userGroups.find((g) => String(g.id) === key)
+        const group = (userGroups || []).find((g) => String(g.id) === key)
         return group?.groupName || ''
       }
       return ''

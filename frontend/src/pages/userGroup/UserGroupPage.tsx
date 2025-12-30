@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Modal, Form, Input, Space, message, Tag, Transfer } from 'antd'
+import { Table, Button, Modal, Form, Input, Select, Space, message, Tag, Transfer } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, TeamOutlined } from '@ant-design/icons'
 import { userGroupApi } from '../../api/userGroup'
 import { userApi } from '../../api/user'
@@ -24,9 +24,16 @@ export default function UserGroupPage() {
     setLoading(true)
     try {
       const res = await userGroupApi.getAll()
-      setUserGroups(res.data.data)
+      // 后端返回格式: ApiResponse<List<UserGroup>>，res.data 就是 List<UserGroup>
+      const groupList = Array.isArray(res.data) ? res.data : []
+      setUserGroups(groupList)
+      if (groupList.length === 0) {
+        console.warn('用户组列表为空')
+      }
     } catch (error) {
       console.error('加载用户组列表失败:', error)
+      message.error('加载用户组列表失败')
+      setUserGroups([])
     } finally {
       setLoading(false)
     }
@@ -35,9 +42,12 @@ export default function UserGroupPage() {
   const loadUsers = async () => {
     try {
       const res = await userApi.getAll()
-      setUsers(res.data.data)
+      // 后端返回格式: ApiResponse<List<User>>，res.data 就是 List<User>
+      const userList = Array.isArray(res.data) ? res.data : []
+      setUsers(userList)
     } catch (error) {
       console.error('加载用户列表失败:', error)
+      setUsers([])
     }
   }
 
@@ -73,10 +83,13 @@ export default function UserGroupPage() {
     setCurrentGroup(group)
     try {
       const res = await userGroupApi.getMembers(group.id)
-      setTargetKeys(res.data.data.map((u) => String(u.id)))
+      // 后端返回格式: ApiResponse<List<User>>，res.data 就是 List<User>
+      const memberList = Array.isArray(res.data) ? res.data : []
+      setTargetKeys(memberList.map((u) => String(u.id)))
       setMemberModalVisible(true)
     } catch (error) {
       console.error('加载成员列表失败:', error)
+      setTargetKeys([])
     }
   }
 
@@ -101,7 +114,9 @@ export default function UserGroupPage() {
 
     try {
       const currentMembers = await userGroupApi.getMembers(currentGroup.id)
-      const currentMemberIds = currentMembers.data.data.map((u) => u.id)
+      // 后端返回格式: ApiResponse<List<User>>，res.data 就是 List<User>
+      const memberList = Array.isArray(currentMembers.data) ? currentMembers.data : []
+      const currentMemberIds = memberList.map((u) => u.id)
       const newMemberIds = targetKeys.map(Number)
 
       // 计算需要添加和移除的成员
@@ -119,6 +134,7 @@ export default function UserGroupPage() {
       setMemberModalVisible(false)
     } catch (error) {
       console.error('管理成员失败:', error)
+      message.error('管理成员失败')
     }
   }
 
@@ -211,7 +227,7 @@ export default function UserGroupPage() {
         width={600}
       >
         <Transfer
-          dataSource={users.map((u) => ({ key: String(u.id), title: u.realName }))}
+          dataSource={(users || []).map((u) => ({ key: String(u.id), title: u.realName }))}
           titles={['可选用户', '已选用户']}
           targetKeys={targetKeys}
           onChange={setTargetKeys}

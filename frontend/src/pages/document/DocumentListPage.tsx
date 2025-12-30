@@ -37,10 +37,22 @@ export default function DocumentListPage() {
         page: page - 1,
         size: pageSize,
       })
-      setDocuments(res.data.data.content || [])
-      setTotal(res.data.data.totalElements || 0)
+      const responseData = res.data.data
+      if (responseData && typeof responseData === 'object' && 'content' in responseData) {
+        setDocuments(responseData.content || [])
+        setTotal(responseData.totalElements || 0)
+      } else if (Array.isArray(responseData)) {
+        // Handle case where API returns array directly
+        setDocuments(responseData)
+        setTotal(responseData.length)
+      } else {
+        setDocuments([])
+        setTotal(0)
+      }
     } catch (error) {
       console.error('加载文档列表失败:', error)
+      setDocuments([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }

@@ -12,9 +12,6 @@ export default function LoginPage() {
         try {
             const res = await authApi.login(values)
 
-            console.log('res------', res)
-            console.log('res.data.data------', res.data)
-
             if (res.data) {
                 // 这里拿到真正的登录信息
                 setAuth(res.data)

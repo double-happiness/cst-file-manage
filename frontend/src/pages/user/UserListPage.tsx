@@ -21,9 +21,16 @@ export default function UserListPage() {
     setLoading(true)
     try {
       const res = await userApi.getAll()
-      setUsers(res.data.data)
+      // 后端返回格式: ApiResponse<List<User>>，res.data 就是 List<User>
+      const userList = Array.isArray(res.data) ? res.data : []
+      setUsers(userList)
+      if (userList.length === 0) {
+        console.warn('用户列表为空')
+      }
     } catch (error) {
       console.error('加载用户列表失败:', error)
+      message.error('加载用户列表失败')
+      setUsers([])
     } finally {
       setLoading(false)
     }

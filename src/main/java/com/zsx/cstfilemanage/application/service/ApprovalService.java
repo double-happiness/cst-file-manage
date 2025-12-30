@@ -60,21 +60,32 @@ public class ApprovalService {
      */
     @Transactional
     public void submitForApproval(Long documentId) {
+        log.debug("=== ApprovalService.submitForApproval 开始 ===");
+        log.info("提交审批 - 文档ID: {}", documentId);
+        
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.error("提交审批失败 - 文档不存在: {}", documentId);
+                    return new BizException(ErrorCode.DOCUMENT_NOT_FOUND);
+                });
 
         if (document.getStatus() != DocumentStatus.DRAFT) {
+            log.warn("提交审批失败 - 文档状态无效: {}, 当前状态: {}", documentId, document.getStatus());
             throw new BizException(ErrorCode.DOCUMENT_STATUS_INVALID);
         }
 
         // 查找适用的审批流程
+        log.debug("提交审批 - 查找适用的审批流程");
         ApprovalFlow approvalFlow = findApplicableApprovalFlow(document);
         if (approvalFlow == null) {
+            log.error("提交审批失败 - 未找到适用的审批流程: {}", documentId);
             throw new BizException(ErrorCode.APPROVAL_FLOW_NOT_FOUND);
         }
+        log.info("提交审批 - 找到审批流程: {}, 流程ID: {}", approvalFlow.getFlowName(), approvalFlow.getId());
 
         // 解析审批环节
         List<Map<String, Object>> steps = parseApprovalSteps(approvalFlow.getApprovalSteps());
+        log.info("提交审批 - 审批环节数: {}", steps.size());
 
         // 创建审批记录
         for (int i = 0; i < steps.size(); i++) {
@@ -89,28 +100,37 @@ public class ApprovalService {
 
             // 第一个环节需要设置审批人（根据角色查找用户）
             if (i == 0) {
+                log.debug("提交审批 - 查找第一个环节审批人, 角色ID: {}", record.getApproverRoleId());
                 Long approverId = findApproverByRole(record.getApproverRoleId());
                 if (approverId == null) {
+                    log.error("提交审批失败 - 未找到审批人, 角色ID: {}", record.getApproverRoleId());
                     throw new BizException(ErrorCode.APPROVER_NOT_FOUND);
                 }
                 User approver = userRepository.findById(approverId)
-                        .orElseThrow(() -> new BizException(ErrorCode.USER_NOT_FOUND));
+                        .orElseThrow(() -> {
+                            log.error("提交审批失败 - 审批人不存在: {}", approverId);
+                            return new BizException(ErrorCode.USER_NOT_FOUND);
+                        });
                 record.setApproverId(approverId);
                 record.setApproverName(approver.getRealName());
+                log.info("提交审批 - 第一个环节审批人: {} ({})", approver.getRealName(), approverId);
 
                 // 发送通知给第一个审批人
                 notificationService.sendApprovalNotification(approver, document);
+                log.debug("提交审批 - 已发送通知给审批人: {}", approver.getRealName());
             }
 
             approvalRecordRepository.save(record);
+            log.debug("提交审批 - 创建审批记录: 环节 {}, 角色: {}", i + 1, record.getApproverRoleName());
         }
 
         // 更新文档状态
         document.setStatus(DocumentStatus.PENDING_APPROVAL);
         document.setCurrentApprovalFlowId(approvalFlow.getId());
         documentRepository.save(document);
-
-        // TODO: 发送通知给第一个审批人
+        log.info("提交审批成功 - 文档ID: {}, 审批流程ID: {}, 审批环节数: {}", 
+                documentId, approvalFlow.getId(), steps.size());
+        log.debug("=== ApprovalService.submitForApproval 结束 ===");
     }
 
     /**
@@ -118,43 +138,60 @@ public class ApprovalService {
      */
     @Transactional
     public void approveDocument(Long documentId, ApprovalStatus status, String comment) {
+        log.debug("=== ApprovalService.approveDocument 开始 ===");
+        log.info("审批文档 - 文档ID: {}, 审批状态: {}, 审批意见: {}", documentId, status, comment);
+        
         Long userId = SecurityContext.getCurrentUserId();
         if (userId == null) {
+            log.error("审批文档失败 - 用户未授权");
             throw new BizException(ErrorCode.UNAUTHORIZED);
         }
+        log.debug("审批文档 - 当前审批人ID: {}", userId);
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new BizException(ErrorCode.DOCUMENT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.error("审批文档失败 - 文档不存在: {}", documentId);
+                    return new BizException(ErrorCode.DOCUMENT_NOT_FOUND);
+                });
 
         // 查找当前审批记录
         ApprovalRecord record = approvalRecordRepository
                 .findPendingByDocumentAndApprover(documentId, userId, ApprovalStatus.PENDING)
-                .orElseThrow(() -> new BizException(ErrorCode.APPROVAL_RECORD_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.error("审批文档失败 - 审批记录不存在: 文档ID={}, 审批人ID={}", documentId, userId);
+                    return new BizException(ErrorCode.APPROVAL_RECORD_NOT_FOUND);
+                });
+        log.debug("审批文档 - 找到审批记录: 环节 {}, 角色: {}", record.getStepOrder(), record.getApproverRoleName());
 
         // 更新审批记录
         record.setStatus(status);
         record.setComment(comment);
         record.setApproveTime(java.time.LocalDateTime.now());
         approvalRecordRepository.save(record);
+        log.info("审批文档 - 审批记录已更新: 环节 {}, 状态: {}", record.getStepOrder(), status);
 
         // 处理审批结果
         if (status == ApprovalStatus.APPROVED) {
+            log.debug("审批文档 - 审批通过，检查下一环节");
             // 检查是否还有下一环节
             List<ApprovalRecord> nextSteps = approvalRecordRepository
                     .findCurrentStepRecords(documentId, ApprovalStatus.PENDING);
 
             if (nextSteps.isEmpty()) {
                 // 所有环节都已完成，审批通过
+                log.info("审批文档 - 所有环节已完成，审批通过");
                 document.setStatus(DocumentStatus.APPROVED);
                 // 通知上传人审批通过
                 User uploader = userRepository.findById(document.getCreateUserId())
                         .orElse(null);
                 if (uploader != null) {
                     notificationService.sendApprovalPassedNotification(uploader, document);
+                    log.debug("审批文档 - 已发送审批通过通知给上传人: {}", uploader.getRealName());
                 }
             } else {
                 // 流转到下一环节
                 ApprovalRecord nextStep = nextSteps.get(0);
+                log.info("审批文档 - 流转到下一环节: {}", nextStep.getStepOrder());
                 // 根据角色查找审批人
                 Long nextApproverId = findApproverByRole(nextStep.getApproverRoleId());
                 if (nextApproverId != null) {
@@ -163,24 +200,30 @@ public class ApprovalService {
                         nextStep.setApproverId(nextApproverId);
                         nextStep.setApproverName(nextApprover.getRealName());
                         approvalRecordRepository.save(nextStep);
+                        log.info("审批文档 - 下一环节审批人: {} ({})", nextApprover.getRealName(), nextApproverId);
                         // 发送通知给下一环节审批人
                         notificationService.sendApprovalNotification(nextApprover, document);
+                        log.debug("审批文档 - 已发送通知给下一环节审批人");
                     }
                 }
                 document.setStatus(DocumentStatus.APPROVING);
             }
         } else if (status == ApprovalStatus.REJECTED || status == ApprovalStatus.MODIFY_REQUIRED) {
             // 驳回，退回给上传人
+            log.info("审批文档 - 审批驳回，退回给上传人");
             document.setStatus(DocumentStatus.REJECTED);
             // 通知上传人
             User uploader = userRepository.findById(document.getCreateUserId())
                     .orElse(null);
             if (uploader != null) {
                 notificationService.sendApprovalRejectedNotification(uploader, document, comment);
+                log.debug("审批文档 - 已发送驳回通知给上传人: {}", uploader.getRealName());
             }
         }
 
         documentRepository.save(document);
+        log.info("审批文档成功 - 文档ID: {}, 最终状态: {}", documentId, document.getStatus());
+        log.debug("=== ApprovalService.approveDocument 结束 ===");
     }
 
     /**
@@ -244,7 +287,13 @@ public class ApprovalService {
      * 查询审批进度
      */
     public List<ApprovalRecord> getApprovalProgress(Long documentId) {
-        return approvalRecordRepository.findByDocumentIdOrderByStepOrderAsc(documentId);
+        log.debug("=== ApprovalService.getApprovalProgress 开始 ===");
+        log.info("查询审批进度 - 文档ID: {}", documentId);
+        
+        List<ApprovalRecord> records = approvalRecordRepository.findByDocumentIdOrderByStepOrderAsc(documentId);
+        log.info("查询审批进度成功 - 文档ID: {}, 审批记录数: {}", documentId, records.size());
+        log.debug("=== ApprovalService.getApprovalProgress 结束 ===");
+        return records;
     }
 }
 

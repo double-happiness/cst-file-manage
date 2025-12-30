@@ -24,9 +24,16 @@ export default function RoleListPage() {
     setLoading(true)
     try {
       const res = await roleApi.getAll()
-      setRoles(res.data.data)
+      // 后端返回格式: ApiResponse<List<Role>>，res.data 就是 List<Role>
+      const roleList = Array.isArray(res.data) ? res.data : []
+      setRoles(roleList)
+      if (roleList.length === 0) {
+        console.warn('角色列表为空')
+      }
     } catch (error) {
       console.error('加载角色列表失败:', error)
+      message.error('加载角色列表失败')
+      setRoles([])
     } finally {
       setLoading(false)
     }
@@ -35,9 +42,12 @@ export default function RoleListPage() {
   const loadPermissions = async () => {
     try {
       const res = await permissionApi.getAll()
-      setPermissions(res.data.data)
+      // 后端返回格式: ApiResponse<List<Permission>>，res.data 就是 List<Permission>
+      const permissionList = Array.isArray(res.data) ? res.data : []
+      setPermissions(permissionList)
     } catch (error) {
       console.error('加载权限列表失败:', error)
+      setPermissions([])
     }
   }
 
@@ -199,7 +209,7 @@ export default function RoleListPage() {
         <Form form={permissionForm} layout="vertical" onFinish={handlePermissionSubmit}>
           <Form.Item name="permissionIds" label="选择权限">
             <Checkbox.Group style={{ width: '100%' }}>
-              {permissions.map((permission) => (
+              {(permissions || []).map((permission) => (
                 <div key={permission.id} style={{ marginBottom: 8 }}>
                   <Checkbox value={permission.id}>{permission.permissionName}</Checkbox>
                 </div>

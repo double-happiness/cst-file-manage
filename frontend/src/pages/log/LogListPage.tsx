@@ -45,9 +45,12 @@ export default function LogListPage() {
   const loadUsers = async () => {
     try {
       const res = await userApi.getAll()
-      setUsers(res.data.data)
+      // 后端返回格式: ApiResponse<List<User>>，res.data 就是 List<User>
+      const userList = Array.isArray(res.data) ? res.data : []
+      setUsers(userList)
     } catch (error) {
       console.error('加载用户列表失败:', error)
+      setUsers([])
     }
   }
 
@@ -59,8 +62,17 @@ export default function LogListPage() {
         page: page - 1,
         size: pageSize,
       })
-      setLogs(res.data.data.content || [])
-      setTotal(res.data.data.totalElements || 0)
+      const responseData = res.data.data
+      if (responseData && typeof responseData === 'object' && 'content' in responseData) {
+        setLogs(responseData.content || [])
+        setTotal(responseData.totalElements || 0)
+      } else if (Array.isArray(responseData)) {
+        setLogs(responseData)
+        setTotal(responseData.length)
+      } else {
+        setLogs([])
+        setTotal(0)
+      }
     } catch (error) {
       console.error('加载日志列表失败:', error)
     } finally {
@@ -149,7 +161,7 @@ export default function LogListPage() {
             allowClear
             showSearch
           >
-            {users.map((u) => (
+            {(users || []).map((u) => (
               <Select.Option key={u.id} value={u.id}>
                 {u.realName}
               </Select.Option>

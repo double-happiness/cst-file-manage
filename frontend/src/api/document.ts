@@ -47,11 +47,9 @@ export const documentApi = {
   },
 
   // 搜索文档
-  search: (params: DocumentSearchParams) => {
-    return http.get<ApiResponse<{ content: Document[]; totalElements: number; totalPages: number }>>(
-      '/v1/documents/search',
-      { params }
-    )
-  },
+  search: (data: DocumentSearchParams) => {
+    const res = http.post<ApiResponse<Document>>('/v1/documents/search', data)
+    console.log("res--------", res)
+    return res
+  }
 }
-
