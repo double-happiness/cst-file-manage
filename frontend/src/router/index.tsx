@@ -9,7 +9,6 @@ import ApprovalHistoryPage from '../pages/approval/ApprovalHistoryPage'
 import DistributionPage from '../pages/distribution/DistributionPage'
 import VersionListPage from '../pages/version/VersionListPage'
 import VersionComparePage from '../pages/version/VersionComparePage'
-import VersionManagementPage from '../pages/version/VersionManagementPage'
 import UserListPage from '../pages/user/UserListPage'
 import RoleListPage from '../pages/role/RoleListPage'
 import PermissionListPage from '../pages/permission/PermissionListPage'
@@ -47,6 +46,10 @@ export const router = createBrowserRouter([
         element: <DocumentListPage />,
       },
       {
+        path: 'documents/list',
+        element: <DocumentListPage />,
+      },
+      {
         path: 'documents/upload',
         element: <DocumentUploadPage />,
       },
@@ -65,10 +68,6 @@ export const router = createBrowserRouter([
       {
         path: 'distributions',
         element: <DistributionPage />,
-      },
-      {
-        path: 'versions',
-        element: <VersionManagementPage />,
       },
       {
         path: 'versions/:fileNumber',

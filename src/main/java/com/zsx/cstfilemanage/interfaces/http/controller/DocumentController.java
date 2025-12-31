@@ -64,13 +64,10 @@ public class DocumentController {
      */
     @GetMapping("/{id}")
     public ApiResponse<DocumentResponse> getDocument(@PathVariable Long id) {
-        log.debug("=== 查询文档详情接口调用开始 ===");
-        log.info("查询文档详情请求 - 文档ID: {}", id);
         try {
             Document document = documentService.getDocumentById(id);
             log.info("查询文档详情成功 - 文档ID: {}, 文件编号: {}, 文件名称: {}", 
                     document.getId(), document.getFileNumber(), document.getFileName());
-            log.debug("=== 查询文档详情接口调用结束 ===");
             return ApiResponse.success(DocumentResponse.from(document));
         } catch (Exception e) {
             log.error("查询文档详情失败 - 文档ID: {}, 错误信息: {}", id, e.getMessage(), e);

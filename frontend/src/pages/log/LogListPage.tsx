@@ -62,7 +62,7 @@ export default function LogListPage() {
         page: page - 1,
         size: pageSize,
       })
-      const responseData = res.data.data
+      const responseData = res.data
       if (responseData && typeof responseData === 'object' && 'content' in responseData) {
         setLogs(responseData.content || [])
         setTotal(responseData.totalElements || 0)

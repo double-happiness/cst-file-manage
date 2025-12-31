@@ -33,7 +33,7 @@ export default function DocumentDetailPage() {
     setLoading(true)
     try {
       const res = await documentApi.getById(Number(id))
-      setDocument(res.data.data)
+      setDocument(res.data)
     } catch (error) {
       console.error('加载文档详情失败:', error)
     } finally {

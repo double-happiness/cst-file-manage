@@ -83,7 +83,7 @@ export default function RoleListPage() {
     setCurrentRole(role)
     try {
       const res = await roleApi.getPermissions(role.id)
-      permissionForm.setFieldsValue({ permissionIds: res.data.data.map((p) => p.id) })
+      permissionForm.setFieldsValue({ permissionIds: res.data.map((p) => p.id) })
       setPermissionModalVisible(true)
     } catch (error) {
       console.error('加载角色权限失败:', error)

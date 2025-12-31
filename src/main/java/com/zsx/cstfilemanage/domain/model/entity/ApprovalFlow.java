@@ -52,7 +52,7 @@ public class ApprovalFlow {
      * 是否启用
      */
     @Column(nullable = false)
-    private Boolean enabled = true;
+    private Boolean enabled;
 
     /**
      * 创建时间

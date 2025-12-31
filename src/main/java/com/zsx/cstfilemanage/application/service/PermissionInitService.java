@@ -153,6 +153,9 @@ public class PermissionInitService implements CommandLineRunner {
 
         // 普通查看人员角色
         Role viewerRole = createRoleIfNotExists("VIEWER", "普通查看人员", "只能查看文档");
+        // 
+        Role viewerRole = createRoleIfNotExists("VIEWER", "普通查看人员", "只能查看文档");
+        Role viewerRole = createRoleIfNotExists("VIEWER", "普通查看人员", "只能查看文档");
 
         // 为角色分配权限
         assignPermissionsToRole(adminRole, ".*"); // 管理员拥有所有权限

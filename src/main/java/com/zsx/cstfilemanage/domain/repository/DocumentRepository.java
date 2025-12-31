@@ -54,12 +54,19 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     /**
      * 多条件搜索
      */
-    @Query("SELECT d FROM Document d WHERE " +
-           "(:fileNumber IS NULL OR d.fileNumber LIKE %:fileNumber%) AND " +
-           "(:fileName IS NULL OR d.fileName LIKE %:fileName%) AND " +
-           "(:productModel IS NULL OR d.productModel = :productModel) AND " +
-           "(:status IS NULL OR d.status = :status) AND " +
-           "(:compilerId IS NULL OR d.compilerId = :compilerId)")
+    @Query("""
+            SELECT d FROM Document d
+            WHERE
+            (:fileNumber IS NULL OR :fileNumber = '' OR d.fileNumber LIKE CONCAT('%', :fileNumber, '%'))
+            AND
+            (:fileName IS NULL OR :fileName = '' OR d.fileName LIKE CONCAT('%', :fileName, '%'))
+            AND
+            (:productModel IS NULL OR :productModel = '' OR d.productModel = :productModel)
+            AND
+            (:status IS NULL OR d.status = :status)
+            AND
+            (:compilerId IS NULL OR d.compilerId = :compilerId)
+            """)
     Page<Document> searchDocuments(
             @Param("fileNumber") String fileNumber,
             @Param("fileName") String fileName,

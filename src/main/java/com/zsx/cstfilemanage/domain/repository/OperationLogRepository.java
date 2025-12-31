@@ -29,11 +29,17 @@ public interface OperationLogRepository extends JpaRepository<OperationLog, Long
     /**
      * 多条件查询日志
      */
-    @Query("SELECT ol FROM OperationLog ol WHERE " +
-           "(:userId IS NULL OR ol.userId = :userId) AND " +
-           "(:operationType IS NULL OR ol.operationType = :operationType) AND " +
-           "(:startTime IS NULL OR ol.createTime >= :startTime) AND " +
-           "(:endTime IS NULL OR ol.createTime <= :endTime)")
+    @Query("""
+            SELECT ol FROM OperationLog ol
+            WHERE
+            (:userId IS NULL OR ol.userId = :userId)
+            AND
+            (:operationType IS NULL OR ol.operationType = :operationType)
+            AND
+            (:startTime IS NULL OR ol.createTime >= :startTime)
+            AND
+            (:endTime IS NULL OR ol.createTime < :endTime)
+            """)
     Page<OperationLog> searchLogs(
             @Param("userId") Long userId,
             @Param("operationType") OperationType operationType,
@@ -41,6 +47,7 @@ public interface OperationLogRepository extends JpaRepository<OperationLog, Long
             @Param("endTime") LocalDateTime endTime,
             Pageable pageable
     );
+
 
     /**
      * 查询指定时间之前的日志（用于清理）

@@ -37,11 +37,11 @@ export default function DocumentListPage() {
         page: page - 1,
         size: pageSize,
       })
-      const responseData = res.data.data
+      const responseData = res.data
       if (responseData && typeof responseData === 'object' && 'content' in responseData) {
         setDocuments(responseData.content || [])
         setTotal(responseData.totalElements || 0)
-      } else if (Array.isArray(responseData)) {
+      } else if (Array.isArray(responseData.content)) {
         // Handle case where API returns array directly
         setDocuments(responseData)
         setTotal(responseData.length)

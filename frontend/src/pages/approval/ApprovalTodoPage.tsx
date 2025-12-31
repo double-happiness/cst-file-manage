@@ -32,7 +32,7 @@ export default function ApprovalTodoPage() {
         page: 0,
         size: 100,
       })
-      setDocuments(res.data.data.content || [])
+      setDocuments(res.data.content || [])
     } catch (error) {
       console.error('加载待审批文档失败:', error)
     } finally {
@@ -49,7 +49,7 @@ export default function ApprovalTodoPage() {
   const loadApprovalProgress = async (documentId: number) => {
     try {
       const res = await approvalApi.getProgress(documentId)
-      setApprovalRecords(res.data.data)
+      setApprovalRecords(res.data)
     } catch (error) {
       console.error('加载审批进度失败:', error)
     }

@@ -60,9 +60,6 @@ public class ApprovalService {
      */
     @Transactional
     public void submitForApproval(Long documentId) {
-        log.debug("=== ApprovalService.submitForApproval 开始 ===");
-        log.info("提交审批 - 文档ID: {}", documentId);
-        
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> {
                     log.error("提交审批失败 - 文档不存在: {}", documentId);
@@ -75,7 +72,6 @@ public class ApprovalService {
         }
 
         // 查找适用的审批流程
-        log.debug("提交审批 - 查找适用的审批流程");
         ApprovalFlow approvalFlow = findApplicableApprovalFlow(document);
         if (approvalFlow == null) {
             log.error("提交审批失败 - 未找到适用的审批流程: {}", documentId);
@@ -90,6 +86,7 @@ public class ApprovalService {
         // 创建审批记录
         for (int i = 0; i < steps.size(); i++) {
             Map<String, Object> step = steps.get(i);
+            log.info("step--------{}", step);
             ApprovalRecord record = new ApprovalRecord();
             record.setDocumentId(documentId);
             record.setApprovalFlowId(approvalFlow.getId());
@@ -128,7 +125,7 @@ public class ApprovalService {
         document.setStatus(DocumentStatus.PENDING_APPROVAL);
         document.setCurrentApprovalFlowId(approvalFlow.getId());
         documentRepository.save(document);
-        log.info("提交审批成功 - 文档ID: {}, 审批流程ID: {}, 审批环节数: {}", 
+        log.info("提交审批成功 - 文档ID: {}, 审批流程ID: {}, 审批环节数: {}",
                 documentId, approvalFlow.getId(), steps.size());
         log.debug("=== ApprovalService.submitForApproval 结束 ===");
     }
@@ -140,7 +137,7 @@ public class ApprovalService {
     public void approveDocument(Long documentId, ApprovalStatus status, String comment) {
         log.debug("=== ApprovalService.approveDocument 开始 ===");
         log.info("审批文档 - 文档ID: {}, 审批状态: {}, 审批意见: {}", documentId, status, comment);
-        
+
         Long userId = SecurityContext.getCurrentUserId();
         if (userId == null) {
             log.error("审批文档失败 - 用户未授权");
@@ -231,7 +228,6 @@ public class ApprovalService {
      */
     private ApprovalFlow findApplicableApprovalFlow(Document document) {
         List<ApprovalFlow> flows = approvalFlowRepository.findByEnabledTrue();
-
         for (ApprovalFlow flow : flows) {
             // 简化匹配逻辑，实际应该更复杂
             if (isFlowApplicable(flow, document)) {
@@ -289,7 +285,7 @@ public class ApprovalService {
     public List<ApprovalRecord> getApprovalProgress(Long documentId) {
         log.debug("=== ApprovalService.getApprovalProgress 开始 ===");
         log.info("查询审批进度 - 文档ID: {}", documentId);
-        
+
         List<ApprovalRecord> records = approvalRecordRepository.findByDocumentIdOrderByStepOrderAsc(documentId);
         log.info("查询审批进度成功 - 文档ID: {}, 审批记录数: {}", documentId, records.size());
         log.debug("=== ApprovalService.getApprovalProgress 结束 ===");

@@ -47,9 +47,8 @@ export const documentApi = {
   },
 
   // 搜索文档
-  search: (data: DocumentSearchParams) => {
-    const res = http.post<ApiResponse<Document>>('/v1/documents/search', data)
-    console.log("res--------", res)
+  search: async (data: DocumentSearchParams) => {
+    const res = await http.post<ApiResponse<Document>>('/v1/documents/search', data)
     return res
   }
 }
